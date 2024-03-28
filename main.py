@@ -2,7 +2,8 @@ import os
 import dotenv
 import uvicorn
 from pymongo import MongoClient
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -11,9 +12,16 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
 from langchain.callbacks import get_openai_callback
 
-
 app = FastAPI()
 
+# Thêm middleware CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Có thể điều chỉnh để chỉ cho phép các nguồn cụ thể
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Các phương thức cho phép
+    allow_headers=["*"],  # Các tiêu đề cho phép
+)
 
 @app.on_event("startup")
 async def startup_event():
@@ -23,7 +31,6 @@ async def startup_event():
     db = client.transcripts
     global transcript_collection
     transcript_collection = db.transcripts
-
 
 def process_transcript_files(all_text):
     # split into chunks
@@ -36,10 +43,8 @@ def process_transcript_files(all_text):
     chunks = text_splitter.split_text(all_text)
     return chunks
 
-
 class Question(BaseModel):
     question: str
-
 
 @app.post("/ask")
 async def ask_question(question: Question):
@@ -64,7 +69,6 @@ async def ask_question(question: Question):
         response = chain.run(input_documents=docs, question=user_question)
 
     return {"response": response}
-
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
