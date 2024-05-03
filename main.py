@@ -92,7 +92,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
 from functools import lru_cache  # Sử dụng lru_cache để caching
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 app = FastAPI()
 
